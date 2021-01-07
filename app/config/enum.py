@@ -6,6 +6,7 @@
 # @Description:
 class Enum(list):
     """enumeration 枚举"""
+
     def __getattr__(self, item):
         if item in self:
             return item
@@ -15,8 +16,10 @@ class Enum(list):
         result = super(Enum, self).__add__(other)
         return Enum(result)
 
+
 class TupleEnum(list):
     """"""
+
     def __getattr__(self, item):
         keys = [k for k, v in self]
         if item in keys:
@@ -31,9 +34,11 @@ class TupleEnum(list):
         keys = [k for k, v in self]
         return item in keys
 
+
 class DictEnum(dict):
     """"""
     __getattr__ = lambda self, k: DictEnum(self.get(k)) if type(self.get(k)) is dict else self.get(k)
+
 
 # user
 USER_GENDER = Enum(['M', 'F'])
@@ -49,14 +54,16 @@ ORDER_TYPE = Enum(['COMMODITY', 'TRANSFER'])
 PAYMENT_METHODS = Enum(['WEIXIN', 'PAYPAL'])
 PAYMENT_TYPE = Enum(['WITHOUT_TAX', 'WITH_TAX'])
 PAYMENT_STATUS = Enum(['UNPAID', 'PAID'])
-LOG_STATUS = Enum(['PENDING_REVIEW', 'TRANSFER_APPROVED', 'WAREHOUSE_IN', 'PAYMENT_RECEIVED', 'PROCESSING', 'SHIPPING', 'PORT_ARRIVED', 'RECEIVED', 'PENDING_RETRUN', 'RETURNED'])
+LOG_STATUS = Enum(['PENDING_REVIEW', 'TRANSFER_APPROVED', 'WAREHOUSE_IN', 'PAYMENT_RECEIVED', 'PROCESSING', 'SHIPPING',
+                   'PORT_ARRIVED', 'RECEIVED', 'PENDING_RETRUN', 'RETURNED'])
 ORDER_STATUS = Enum(['PAYMENT_PENDING', 'CANCELLED', 'ABNORMAL', 'DELETE', 'EXPIRED', 'REFUNDED'] + LOG_STATUS)
-ORDER_SOURCES = Enum(['WECHAT', 'IOS', 'ANDROID', 'MANUALLY'])#人工
+ORDER_SOURCES = Enum(['WECHAT', 'IOS', 'ANDROID', 'MANUALLY'])  # 人工
 CURRENCY = Enum(['USD', 'HKD', 'CNY'])
 
 # coupon
 COUPON_SCOPE = Enum(['ORDER', 'ENTRY'])
-COUPON_TYPES = Enum(['NORMAL', 'AMOUNT_DEDUCTION', 'PERCENT_DEDUCTION', 'FINAL_PERCENT_DEDUCTION', 'FREE_SHIPPING', 'SHIPPING_DEDUCTION',])
+COUPON_TYPES = Enum(['NORMAL', 'AMOUNT_DEDUCTION', 'PERCENT_DEDUCTION', 'FINAL_PERCENT_DEDUCTION', 'FREE_SHIPPING',
+                     'SHIPPING_DEDUCTION', ])
 COUPON_APPLY = Enum(['AUTO', 'BY_CODE', 'BY_DISPLAY_ID'])
 
 # tags
@@ -71,12 +78,15 @@ TAG_TYPES = TupleEnum([
 COIN_ONETIME_TASK = Enum(['VERIFIED_ID'])
 COIN_REPEAT_TASK = Enum(['SHARED', 'SECOND_SHARED', 'SHARED_ORDER', 'ORDER'])
 COIN_TASK = COIN_REPEAT_TASK + COIN_ONETIME_TASK
-COIN_TRADE_REASON = Enum(['PAY', 'OTHER', 'CANCEL', 'WITHDRAW', 'CUSTOMS', 'SHIPPING_FEE', 'PROMOTE', 'REFUND', 'CONVERT'] + COIN_TASK)
+COIN_TRADE_REASON = Enum(
+    ['PAY', 'OTHER', 'CANCEL', 'WITHDRAW', 'CUSTOMS', 'SHIPPING_FEE', 'PROMOTE', 'REFUND', 'CONVERT'] + COIN_TASK)
 COIN_TRADE_TYPE = Enum(['INCOME', 'OUTCOME'])
 COIN_TYPE = Enum(['COIN', 'CASH'])
 
 # notification通知
-NOTI_TYPE = Enum(['SYSTEM', 'COMMENT', 'FOLLOW', 'SHIPPING_DELAYED', 'LOGISTIC_DELAYED', 'ORDER_REFUNDED', 'ADMIN_ORDER_PAID', 'DAILY_ORDER_REPORT', 'USER_SIGNUP', 'POST_LIKED', 'REPLY', ] + ORDER_STATUS)
+NOTIFICATION_TYPE = Enum(
+    ['SYSTEM', 'COMMENT', 'FOLLOW', 'SHIPPING_DELAYED', 'LOGISTIC_DELAYED', 'ORDER_REFUNDED', 'ADMIN_ORDER_PAID',
+     'DAILY_ORDER_REPORT', 'USER_SIGNUP', 'POST_LIKED', 'REPLY', ] + ORDER_STATUS)
 
 # notification channels
 CHANNELS = Enum(['EMAIL', 'SMS', 'VOICE', 'WECHAT', 'WECHATFORMAL', 'IOS', 'NODEJS'])
@@ -91,4 +101,4 @@ REPORT_TYPE = Enum(['ORDER', 'LOGISTIC', 'ORDER_SOURCE', 'EXPENDITURE', 'IOS_SIG
 # post
 POST_STATUS = Enum(['NEW', 'MOD', 'DEL'])
 ACTIVITY_STATUS = Enum(['PENDING', 'PROCESSING', 'REFUSED'])
-POST_TAG_TYEPS = Enum(['TRADE', 'SERVICE', 'SHOW', 'UNCLASSIFIED'])
+POST_TAG_TYPES = Enum(['TRADE', 'SERVICE', 'SHOW', 'UNCLASSIFIED'])
