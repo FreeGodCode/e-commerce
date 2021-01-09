@@ -7,6 +7,7 @@
 import os
 import datetime
 
+from blinker import Namespace
 from celery.schedules import crontab
 from pymongo import ReadPreference
 
@@ -260,3 +261,91 @@ def get_config_form_host(app):
     flask_env = os.environ.get('FLASK_ENV', 'develop')
     configure = get_config(flask_env, app)
     return configure
+
+
+namespace = Namespace()
+notification = namespace.signal('noti')
+
+# user actions
+user_signup = namespace.signal('user_signup')
+ref_visit = namespace.signal('ref_visit')
+item_visit = namespace.signal('item_visit')
+item_bought = namespace.signal('item_bought')
+coupon_received = namespace.signal('coupon_received')
+
+# system notification
+# 购物车
+cart_changed = namespace.signal('cart_changed')
+payment_received = namespace.signal('payment_received')
+
+# model events
+# 订单
+order_created = namespace.signal('order_created')
+order_finished = namespace.signal('order_finished')
+
+order_logistic_status_changed = namespace.signal('order_logistic_status_changed')
+logistic_status_changed = namespace.signal('logistic_status_changed') # 物流状态该变
+logistic_auto_splitted = namespace.signal('logistic_auto_splitted') # 物流自动
+
+
+order_status_changed = namespace.signal('order_status_changed') # 订单状态改变
+logistic_info_updated = namespace.signal('logistic_info_updated') # 物流信息更新
+
+express_tracking_updated = namespace.signal('express_tracking_updated')
+
+
+UEDITOR_CONFIG = {
+    'imageActionName': 'uploadimage',
+    'imageFieldName': 'upfile',
+    'imageMaxSize': 2048000,
+    'imageAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp'],
+    'imageCompressEnable': True,
+    'imageCompressBorder': 1600,
+    'imageInsertAlign': 'none',
+    'imageUrlPrefix': '',
+    'imagePathFormat': '/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}',
+    'scrawlActionName': 'uploadscrawl',
+    'scrawlFieldName': 'upfile',
+    'scrawlPathFormat': '/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}',
+    'scrawlMaxSize': 2048000,
+    'scrawlUrlPrefix': '',
+    'scrawlInsertAlign': 'none',
+
+    'snapscreenActionName': 'uploadimage',
+    'snapscreenPathFormat': '/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}',
+    'snapsereenUrlPrefix': '',
+    'snapscreenInsertAlign': 'none',
+
+    'catcherLocalDomain': ['127.0.0.1', 'localhost', 'img.baidu.com'],
+    'catcherActionName': 'catchimage',
+    'catcherFieldName': 'source',
+    'catcherPathFormat': '/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}',
+    'catcherUrlPrefix': '',
+    'catcherMaxSize': 2048000,
+    'catcheraAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp'],
+
+    'videoActionName': 'uploadvideo',
+    'videoFileName': 'upfile',
+    'videoPathFormat': '/ueditor/php/upload/video/{yyyy}{mm}{dd}/{time}{rand:6}',
+    'videoUrlPrefix': '',
+    'videoMaxSize': 102400000,
+    'videoAllowFiles': ['.flv', '.swf', '.mkv', '.avi', '.rm', '.rmvb', '.mpeg', '.mpg', '.ogg', '.ogv', '.mov', '.wmv', '.mp4', '.webm', '.mp3', '.wav', '.mid'],
+
+    'fileActionName': 'uploadfile',
+    'fileFieldName': 'upfile',
+    'filePathFormat': '/ueditor/php/upload/file/{yyyy}{mm}{dd}/{time}{rand:6}',
+    'fileUrlPrefix': '',
+    'fileMaxSize': 51200000,
+    'fileAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.flv', '.swf', '.mkv', '.avi', '.rm', '.rmvb', '.mpeg', '.mpg', '.ogg', '.ogv', '.mov', 'wmv', '.mp4', '.webm', '.mp3', '.wav', '.mid', '.rar', '.zip', '.rar', '.zip', '.tar', '.gz', '.7z', '.bz2', '.cab', '.iso', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.pdf', '.txt', '.md', '.xml'],
+    'imageManagerActionName': 'listimage',
+    'imageManagerListPath': '/ueditor/php/upload/image/',
+    'imageManagerListSize': 20,
+    'imageManagerUrlPrefix': '',
+    'imageManagerInsertAlign': 'none',
+    'imageManagerAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp'],
+    'fileManagerActionName': 'listfile',
+    'fileManagerListPath': '/ueditor/php/upload/file/',
+    'fileManagerUrlPrefix': '',
+    'fileManagerListSize': 20,
+    'fileManagerAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.flv', '.swf', '.mkv', '.avi', '.rm', '.rmvb', '.mpeg', '.mpg', '.ogg', '.ogv', '.mov', '.wmv', '.mp4', '.webm', '.mp3', '.wav', '.mid', '.rar', '.zip', '.tar', '.gz', '.7z', '.bz2', '.cab', '.iso', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.pdf', '.txt', '.md', '.xml'],
+}
