@@ -21,9 +21,9 @@ def create_app(config=None, app_name=None, blueprints=None):
     :return:
     """
     if app_name is None:
-        app_name = ConfigsModel.BaseConfig.PROJECT
+        app_name = config.Config.PROJECT
 
-    if app_name != ConfigsModel.APP_NAME.work:
+    if app_name != config.APP_NAME.work:
         pass
     app = Flask(__name__, static_folder='../static', template_folder='../templates')
     # app.config.from_object(config.get(env))

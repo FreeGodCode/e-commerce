@@ -35,7 +35,7 @@ class Config:
     DEBUG = False
     SECRET_KEY = 'tycarry'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    PROJECT = APP_NAME.meybe
+    PROJECT = APP_NAME.maybe
     VERSION = 'V1.0'
 
     # flask_debug_toolbar
@@ -62,8 +62,8 @@ class Config:
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'upload')
     AVATAR_FOLDER = os.path.join(BASE_DIR, 'static/img/avatar')
 
-    SESSION_COOKIE_DOMAIN = '.maybi.cn'
-    SERVER_NAME = 'maybi.cn'
+    SESSION_COOKIE_DOMAIN = '.maybe.cn'
+    SERVER_NAME = 'maybe.cn'
     # flask_login
     REMEMBER_COOKIE_DOMAIN = 'maybe.cn'
     PERMANENT_SESSION_LIFETIME = datetime.timedelta(days=31)
@@ -176,7 +176,7 @@ class Config:
         # 快递
         'kuaidi_request_every_8_hour': {
             'task': 'app.services.scheduling.express.check_kuaidi',
-            'schedule': crontab(minure=0, hour='*/8'),
+            'schedule': crontab(minute=0, hour='*/8'),
         },
     }
 
@@ -304,6 +304,7 @@ UEDITOR_CONFIG = {
     'imageInsertAlign': 'none',
     'imageUrlPrefix': '',
     'imagePathFormat': '/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}',
+
     'scrawlActionName': 'uploadscrawl',
     'scrawlFieldName': 'upfile',
     'scrawlPathFormat': '/ueditor/php/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}',
@@ -337,12 +338,14 @@ UEDITOR_CONFIG = {
     'fileUrlPrefix': '',
     'fileMaxSize': 51200000,
     'fileAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.flv', '.swf', '.mkv', '.avi', '.rm', '.rmvb', '.mpeg', '.mpg', '.ogg', '.ogv', '.mov', 'wmv', '.mp4', '.webm', '.mp3', '.wav', '.mid', '.rar', '.zip', '.rar', '.zip', '.tar', '.gz', '.7z', '.bz2', '.cab', '.iso', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.pdf', '.txt', '.md', '.xml'],
+
     'imageManagerActionName': 'listimage',
     'imageManagerListPath': '/ueditor/php/upload/image/',
     'imageManagerListSize': 20,
     'imageManagerUrlPrefix': '',
     'imageManagerInsertAlign': 'none',
     'imageManagerAllowFiles': ['.png', '.jpg', '.jpeg', '.gif', '.bmp'],
+
     'fileManagerActionName': 'listfile',
     'fileManagerListPath': '/ueditor/php/upload/file/',
     'fileManagerUrlPrefix': '',
