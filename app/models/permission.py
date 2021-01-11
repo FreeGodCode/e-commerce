@@ -4,13 +4,13 @@
 # @IDE: PyCharm
 # @Create time: 1/11/21 3:45 PM
 # @Description:
-__all__ = ['BackendPermission', 'Role']
-
 from app import db
+
+__all__ = ['BackendPermission', 'Role']
 
 
 class BackendPermission(db.Document):
-    """"""
+    """后台权限"""
     meta = {
         'indexes': ['name'],
     }
@@ -19,7 +19,7 @@ class BackendPermission(db.Document):
 
 
 class Role(db.Document):
-    """"""
+    """角色"""
     name = db.StringField(max_length=128, unique=True)
     description = db.StringField(max_length=256)
 

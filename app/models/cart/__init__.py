@@ -2,17 +2,17 @@
 # @Author: ty
 # @File name: __init__.py.py 
 # @IDE: PyCharm
-# @Create time: 1/11/21 3:58 PM
-# @Description:
-from app.models.user import user, address, guest
+# @Create time: 1/11/21 10:25 PM
+# @Description: 购物车
+from app.models.cart import cart
 
 
 def all():
     result = []
-    models = [user, address, guest]
+    models = [cart]
     for model in models:
         result += model.__all__
-        return result
+    return result
 
 
 __all__ = all()

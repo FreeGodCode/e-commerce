@@ -3,12 +3,12 @@
 # @File name: log.py 
 # @IDE: PyCharm
 # @Create time: 1/11/21 3:37 PM
-# @Description:
-__all__ = ['LogisticLog']
-
+# @Description: 物流
 from datetime import datetime
 
 from app import db
+
+__all__ = ['LogisticLog']
 
 
 class LogisticLog(db.Document):

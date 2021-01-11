@@ -4,6 +4,10 @@
 # @IDE: PyCharm
 # @Create time: 1/9/21 5:05 PM
 # @Description:
+from app.models import permission, log
+from app.models.user import user
+
+
 def all():
     """
 
