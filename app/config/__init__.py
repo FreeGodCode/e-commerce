@@ -262,7 +262,6 @@ def get_config_form_host(app):
     configure = get_config(flask_env, app)
     return configure
 
-
 namespace = Namespace()
 notification = namespace.signal('noti')
 
