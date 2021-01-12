@@ -5,26 +5,83 @@
 # @Create time: 1/12/21 11:30 AM
 # @Description:
 import datetime
-from flask import abort
+import random
+
+from flask import abort, current_app
 import mongoengine
 from flask_login import current_user
 from mongoengine import queryset_manager, Q
 
-from app import db
+from app import db, mongo_inventory
 from app.config.enum import ORDER_TYPE, ORDER_STATUS, ORDER_SOURCES, PAYMENT_STATUS, PAYMENT_TYPE, LOG_STATUS
+
+__all__ = ['Order', 'Payment', 'TransferOrderCode', 'OrderExtra']
+
+from app.models.user.user import User
+
+
+def check_availability_and_update_stock(item_id, sku, quantity):
+    """
+
+    :param item_id:
+    :param sku:
+    :param quantity:
+    :return:
+    """
+    item = mongo_inventory.db.item.find_one({'_id': item_id})
+    if not item['availability']:
+        return False
+    if quantity <= 0:
+        return False
+
+    spec = mongo_inventory.db.item_spec.find_one({'_id': sku, 'stock': -1})
+    if spec:
+        return spec['availability']
+
+    spec = mongo_inventory.db.item_spec.find_and_modify(
+        query={'_id': sku, 'stock': {'$gt': quantity - 1}, 'availability': True},
+        update={'$inc': {'stock': -quantity}},
+        new=True
+    )
+    if not spec:
+        return False
+
+    if spec['stock'] == 0:
+        spec['availability'] = False
+        mongo_inventory.db.item_spec.save(spec)
+        update_item_availability(item_id)
+
+    return True
+
+
+def update_item_availability(item_id):
+    """
+
+    :param item_id:
+    :return:
+    """
+    item = Item.objects(item_id=item_id, availability=True).first()
+    if not item:
+        return None
+    for spec in item.specs:
+        if spec.availability:
+            return
+
+    item.update(set__availability=False, set__status='DEL')
 
 
 class Order(db.Document):
     """"""
     meta = {
         'db_alias': 'db_order',
-        'ordering': ['-created_at']
-        'indexes': ['customer_id', 'status', 'address', 'amount', 'final', 'order_type', 'is_paid', 'is_payment_abnormal', 'refund_entries'],
+        'ordering': ['-created_at'],
+        'indexes': ['customer_id', 'status', 'address', 'amount', 'final', 'order_type', 'is_paid',
+                    'is_payment_abnormal', 'refund_entries'],
     }
     created_at = db.DateTimeField(default=datetime.datetime.utcnow, required=True)
     order_type = db.StringField(choices=ORDER_TYPE, default=ORDER_TYPE.COMMODITY)
     # one day
-    expired_in = db.IntField(default=1440) #in minutes
+    expired_in = db.IntField(default=1440)  # in minutes
     payment_expired_in = db.IntField(default=1440)
     short_id = db.SequenceField(required=True, unique=True)
     is_vip = db.BooleanField(default=False)
@@ -62,13 +119,13 @@ class Order(db.Document):
     entries = db.ListField(db.ReferenceField('OrderEntry', reverse_delete_rule=mongoengine.PULL))
     extra = db.StringField()
 
-    logistics = db.ListField(db.ReferenceField('Logistic')) #库存
+    logistics = db.ListField(db.ReferenceField('Logistic'))  # 库存
     closed_logistics = db.ListField(db.ReferenceField('Logistic'))
 
-    is_paid = db.BooleanField(default=False) #是否支付
-    is_payment_abnormal = db.BooleanField(default=False) #是否支付异常
-    paid_date = db.DateTimeField() #支付时间
-    pay_tax_deadline = db.DateTimeField() #支付税截至时间
+    is_paid = db.BooleanField(default=False)  # 是否支付
+    is_payment_abnormal = db.BooleanField(default=False)  # 是否支付异常
+    paid_date = db.DateTimeField()  # 支付时间
+    pay_tax_deadline = db.DateTimeField()  # 支付税截至时间
 
     refund_entries = db.ListField(db.ReferenceField('OrderEntry', reverse_delete_rule=mongoengine.PULL))
     refund_amount = db.FloatField(default=0)
@@ -80,7 +137,9 @@ class Order(db.Document):
     # 处理中的状态
     PROCESSING_STATUS = [ORDER_STATUS.PAYMENT_RECEIVED, ORDER_STATUS.SHIPPING]
     # 异常状态
-    ABNORMAL_STATUS = [ORDER_STATUS.CANCELLED, ORDER_STATUS.ABNORMAL, ORDER_STATUS.ORDER_DELETE, ORDER_STATUS.EXPIRED, ORDER_STATUS.REFUNDED]
+    ABNORMAL_STATUS = [ORDER_STATUS.CANCELLED, ORDER_STATUS.ABNORMAL, ORDER_STATUS.ORDER_DELETE, ORDER_STATUS.EXPIRED,
+                       ORDER_STATUS.REFUNDED]
+
     def __unicode__(self):
         return '%s' % self.sid
 
@@ -121,7 +180,8 @@ class Order(db.Document):
 
     @queryset_manager
     def abnormal(doc_cls, queryset):
-        return queryset.filter(Q(status__in=doc_cls.ABNORMAL_STATUS) | Q(refund_entries__0__exists=True) & Q(status__in=doc_cls.PROCESSING_STATUS + [ORDER_STATUS.RECEIVED]))
+        return queryset.filter(Q(status__in=doc_cls.ABNORMAL_STATUS) | Q(refund_entries__0__exists=True) & Q(
+            status__in=doc_cls.PROCESSING_STATUS + [ORDER_STATUS.RECEIVED]))
 
     @queryset_manager
     def received(doc_cls, queryset):
@@ -147,7 +207,6 @@ class Order(db.Document):
         if self.status in (self.PROCESSING_STATUS + [ORDER_STATUS.RECEIVED, ORDER_STATUS.REFUNDED]):
             return len(self.refund_entries) > 0
         return False
-
 
     @property
     def tax(self):
@@ -179,8 +238,10 @@ class Order(db.Document):
         return max(self.logistics, key=lambda l: getattr(l.detail, attr))
 
     @classmethod
-    def create_transfer(cls, customer_id, entries, logistic_provider, coupon_codes, coin=0, cash=0, address=None, **kwargs):
-        order = cls(customer_id=customer_id, entries=entries, logistic_provider=logistic_provider, coupon_codes=coupon_codes, coin=coin, cash=cash, **kwargs)
+    def create_transfer(cls, customer_id, entries, logistic_provider, coupon_codes, coin=0, cash=0, address=None,
+                        **kwargs):
+        order = cls(customer_id=customer_id, entries=entries, logistic_provider=logistic_provider,
+                    coupon_codes=coupon_codes, coin=coin, cash=cash, **kwargs)
         if not order.forex:
             order.forex = ForexRate.get()
 
@@ -194,7 +255,8 @@ class Order(db.Document):
         return order
 
     @classmethod
-    def create_from_skus(cls, customer_id, skus, logistic_provider, coupon_codes, coin=0, cash=0, address=None, **kwargs):
+    def create_from_skus(cls, customer_id, skus, logistic_provider, coupon_codes, coin=0, cash=0, address=None,
+                         **kwargs):
         entries = []
         for s in skus:
             availability = check_availability_and_update_stock(s['item_id'], s['sku'], s['quantity'])
@@ -205,7 +267,8 @@ class Order(db.Document):
             entry = OrderEntry(spec=spec, item=item, quantity=s['quantity']).save()
             entries.append(entry)
 
-        order = cls(customer_id=customer_id, entries=entries, logistic_provider=logistic_provider, coupon_codes=coupon_codes, coin=coin, cash=cash, **kwargs)
+        order = cls(customer_id=customer_id, entries=entries, logistic_provider=logistic_provider,
+                    coupon_codes=coupon_codes, coin=coin, cash=cash, **kwargs)
         if not order.forex:
             order.forex = ForexRate.get()
 
@@ -225,7 +288,8 @@ class Order(db.Document):
     def create(cls, customer_id, entries, logistic_provider, coupon_codes, coin=0, cash=0, address=None, **kwargs):
         order_entries = []
         for entry in entries:
-            availability = check_availability_and_update_stock(entry.item_snapshot.item_id, entry.item_spec_snapshot.sku, entry.quantity)
+            availability = check_availability_and_update_stock(entry.item_snapshot.item_id,
+                                                               entry.item_spec_snapshot.sku, entry.quantity)
             if not availability:
                 return entry
             if isinstance(entry, (CartEntry, OrderEntry)):
@@ -234,7 +298,8 @@ class Order(db.Document):
                 e.id = None
                 order_entries.append(e.save())
 
-        order = cls(customer_id=customer_id, entries=order_entries, logistic_provider=logistic_provider, coupon_codes=coupon_codes, coin=coin, cash=cash, **kwargs)
+        order = cls(customer_id=customer_id, entries=order_entries, logistic_provider=logistic_provider,
+                    coupon_codes=coupon_codes, coin=coin, cash=cash, **kwargs)
         if not order.forex:
             order.forex = ForexRate.get()
 
@@ -340,16 +405,24 @@ class Order(db.Document):
         payment_received(self)
 
     def update_payment(self, paid_type, paid_amount, trader):
-        if paid_type == PAYMENT_TYPE.WITHOUT_TAX and not self.is_paid and self.status in [ORDER_STATUS.PAYMENT_PENDING, ORDER_STATUS.W]:
+        if paid_type == PAYMENT_TYPE.WITHOUT_TAX and not self.is_paid and self.status in [ORDER_STATUS.PAYMENT_PENDING,
+                                                                                          ORDER_STATUS.W]:
             if paid_amount == self.final and trader == PAYMENT_TRADERS.PAYPAL:
                 self.set_paid()
             elif paid_amount == float('%.2f' % (self.final * self.forex)) and trader == PAYMENT_TRADERS.WEIXIN:
                 self.set_paid()
             else:
-                current_app.logger.error('error at updating payment. trader: {}; ptype: {}; amount: {} order id: {}'.format(trader, paid_type, paid_amount, self.id))
+                current_app.logger.error(
+                    'error at updating payment. trader: {}; ptype: {}; amount: {} order id: {}'.format(trader,
+                                                                                                       paid_type,
+                                                                                                       paid_amount,
+                                                                                                       self.id))
                 self.is_payment_abnormal = True
         else:
-            current_app.logger.error('error at updating payment. trader: {}; ptype: {}; amount: {};  order id: {}'.format(trader, paid_type, paid_amount, self.id))
+            current_app.logger.error(
+                'error at updating payment. trader: {}; ptype: {}; amount: {};  order id: {}'.format(trader, paid_type,
+                                                                                                     paid_amount,
+                                                                                                     self.id))
             self.is_payment_abnormal = True
         self.save()
 
@@ -372,7 +445,8 @@ class Order(db.Document):
 
         if new_status in LOG_STATUS:
             noti_order(self, new_status)
-            Signals.order_logistic_status_changed.send('Order.Logistic.Status.Changed', order=self, new_status=new_status)
+            Signals.order_logistic_status_changed.send('Order.Logistic.Status.Changed', order=self,
+                                                       new_status=new_status)
         else:
             Signals.order_status_changed.send('order_status_changed', order=self, new_status=new_status)
 
@@ -440,7 +514,26 @@ class Order(db.Document):
         for e in self.refund_entries:
             refund_entries_json.append(e.to_json())
 
-        result = dict(id=str(self.id), short_id=str(self.sid), status=self.status, customer_id=str(self.customer_id), amount=self.amount, cn_shipping=self.cn_shipping, coin=self.coin, lucky_money=self.lucky_money, discount=self.discount, final=self.final, estimated_tax=self.estimated_tax, payment_status='PAID' if self.is_paid else 'UNPAID', payment_ref_number=[p.ref_number for p in Payment.objects(order=self)], created_at=format_date(self.created_at), entries=entries_json, refund_entries=refund_entries_json, refund_amount=self.refund_amount, real_tax=self.real_tax,)
+        result = dict(
+            id=str(self.id),
+            short_id=str(self.sid),
+            status=self.status,
+            customer_id=str(self.customer_id),
+            amount=self.amount,
+            cn_shipping=self.cn_shipping,
+            coin=self.coin,
+            lucky_money=self.lucky_money,
+            discount=self.discount,
+            final=self.final,
+            estimated_tax=self.estimated_tax,
+            payment_status='PAID' if self.is_paid else 'UNPAID',
+            payment_ref_number=[p.ref_number for p in Payment.objects(order=self)],
+            created_at=format_date(self.created_at),
+            entries=entries_json,
+            refund_entries=refund_entries_json,
+            refund_amount=self.refund_amount,
+            real_tax=self.real_tax,
+        )
         if self.address:
             result.update({'address': self.address.to_json()})
         if include_logistic:
@@ -448,11 +541,102 @@ class Order(db.Document):
 
         return result
 
+    def to_grouped_json(self):
+        """
+
+        :return:
+        """
+        res = dict(
+            estimated_weight=self.estimated_weight,
+            amount=self.amount,
+            cn_shipping=self.cn_shipping,
+            coin=self.coin,
+            lucky_money=self.lucky_money,
+            discount=self.discount,
+            final=self.final,
+            extimated_tax=self.extimated_tax,
+        )
+        res['sid'] = self.id
+        res['status'] = self.status
+        if self.address:
+            res.update(dict(address=self.address.to_json()))
+        return res
 
 
+class TransferOrderCode(db.Document):
+    """"""
+    order_id = db.ObjectIdField()
+    code = db.StringField()
+
+    @classmethod
+    def set_order(cls, order_id):
+        code = random.randint(100000, 999999)
+        cls.objects(order_id=order_id).update_one(set__order_id=order_id, set__code=code, upsert=True)
 
 
+class OrderExtra(db.Document):
+    """"""
+    meta = {
+        'indexes': ['order', 'paid_date', 'device_id', 'client', 'version', 'client_channel']
+    }
+    order = db.ReferenceField('Order', unique=True)
+    paid_date = db.DateTimeField()
+    client = db.StringField()
+    version = db.StringField()
+    device_id = db.StringField()
+    client_channel = db.StringField()
 
 
+class Payment(db.Document):
+    """"""
+    meta = {
+        'db_alias': 'db_order',
+        'indexes': ['order', 'ptype', '-created_at'],
+    }
 
+    created_at = db.DateTimeField(default=datetime.datetime.utcnow(), required=True)
+    order = db.ReferenceField('Order')
+    logistic = db.ReferenceField('Logistic')
 
+    other_reason = db.StringField()
+    ptype = db.StringField(required=True, choices=PAYMENT_TYPE)
+    status = db.StringField(max_length=256, required=True, choices=PAYMENT_STATUS, default=PAYMENT_STATUS.UNPAID)
+
+    # transaction reference number from alipay/bank
+    ref_number = db.StringField(max_length=128)
+    paid_amount = db.FloatField()
+    foreign_amount = db.FloatField()
+    currency = db.StringField()
+    buyer_id = db.StringField(max_length=50)
+    trader = db.StringField(choices=PAYMENT_TRADERS)
+    trade_type = db.StringField(choices=TRADE_TYPE)
+    trade_status = db.StringField()
+    trader_msg = db.StringField()
+    extra = db.StringField()
+    modified = db.DateTimeField()
+    redirect_url = db.StringField()
+
+    @property
+    def is_paid(self):
+        return self.status == PAYMENT_STATUS.PAID
+
+    @property
+    def amount(self):
+        if self.ptype == PAYMENT_TYPE.WITHOUT_TAX:
+            return self.order.final
+        if self.ptype == PAYMENT_TYPE.WITH_TAX:
+            return self.order.final + self.order_tax
+
+    def mark_paid(self, data):
+        if self.is_paid:
+            return
+        self.update(set__status=PAYMENT_STATUS.PAID)
+        kwargs = {'set__' + key: value for key, value in data.items()}
+        self.update(**kwargs)
+        self.reload()
+        paid_amount = float(data.get('paid_amount', 0))
+        if self.ptype == PAYMENT_TYPE.WITHOUT_TAX:
+            self.order.update_payment(self.ptype, paid_amount, self.trader)
+
+    def to_json(self):
+        return dict(id=self.id, ref_num=self.ref_number, status=self.status, type=self.type, amount=self.amount)
