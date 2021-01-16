@@ -16,7 +16,7 @@ from app.models.user.user import User
 __all__ = ['Post', 'PostComment', 'PostLike', 'PostFeedback', 'PostActivity', 'PostTag', '']
 
 
-@update_modified_apply
+@update_modified.apply
 class Post(db.Document):
     meta = {
         'db_alias': 'db_content',
