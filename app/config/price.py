@@ -7,6 +7,7 @@
 from math import ceil
 
 from app.config.enum import DictEnum, COUPON_TYPES
+from app.models.inventory.price import ForexRate
 
 
 def with_fx_rate(x, forex=None):
