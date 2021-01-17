@@ -4,3 +4,13 @@
 # @IDE: PyCharm
 # @Create time: 1/11/21 10:25 PM
 # @Description: 库存
+def all():
+    result = []
+    models = []
+    for model in models:
+        result += model.__all__
+
+    return result
+
+
+__all__ = all()

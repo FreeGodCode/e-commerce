@@ -3,14 +3,14 @@
 # @File name: cart.py 
 # @IDE: PyCharm
 # @Create time: 1/11/21 10:30 PM
-# @Description:
+# @Description: 购物车
 from app import db
 
 __all__ = ['Cart', 'EntrySpec', 'CartEntry']
 
 
 class Cart(db.Document):
-    """"""
+    """购物车模型类"""
     meta = {
         'db_alias': 'db_cart',
         'indexes': ['user_id', 'session_key']
@@ -25,6 +25,7 @@ class Cart(db.Document):
 
 
 class CartEntry(db.EmbeddedDocument):
+    """购物车实体类"""
     sku = db.IntField(required=True)
     quantity = db.IntField(default=1, required=True)
     created_at = db.DateTimeField()
