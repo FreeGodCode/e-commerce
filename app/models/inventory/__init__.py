@@ -4,9 +4,12 @@
 # @IDE: PyCharm
 # @Create time: 1/11/21 10:25 PM
 # @Description: 库存
+from app.models.inventory import brand, category, item, statistics, tag, vendor, price
+
+
 def all():
     result = []
-    models = []
+    models = [brand, category, item, price, statistics, tag, vendor]
     for model in models:
         result += model.__all__
 
