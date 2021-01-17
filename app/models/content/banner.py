@@ -10,6 +10,8 @@ from app import db
 
 __all__ = ['Banner']
 
+from app.models.content.board import Board
+
 
 class Banner(db.Document):
     """"""

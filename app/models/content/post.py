@@ -7,7 +7,7 @@
 from datetime import datetime
 
 from flask import current_app
-from mongoengine import queryset_manager
+from mongoengine import queryset_manager, DoesNotExist
 
 from app import db
 from app.config.enum import POST_TAG_TYPES, POST_STATUS, NOTIFICATION_TYPE, ACTIVITY_STATUS
@@ -76,7 +76,7 @@ class Post(db.Document):
         try:
             old_post = Post.objects.get(post_id=new_post['post_id'])
             old_post.status = POST_STATUS.MOD
-        except DoseNotExist:
+        except DoesNotExist:
             current_app.logger.warning('does not exist in db: {}'.format(new_post))
             return
 

@@ -7,7 +7,7 @@
 from datetime import datetime
 
 from flask import current_app
-from mongoengine import queryset_manager
+from mongoengine import queryset_manager, DoesNotExist
 from whoosh.util.times import ceil
 
 from app import db
@@ -16,6 +16,13 @@ from app.models.inventory.brand import Brand
 from app.models.inventory.category import Category
 
 __all__ = ['Item', 'ItemSpec']
+
+from app.models.inventory.price import PriceHistory
+
+from app.models.inventory.statistics import Statistics
+from app.models.inventory.tag import Tag
+
+from app.models.inventory.vendor import Vendor
 
 
 class Item(db.Document):
