@@ -18,7 +18,8 @@ import random
 from functools import partial
 
 import pytz
-from flask import request, url_for, session, redirect, current_app
+from bson import json_util
+from flask import request, url_for, session, redirect, current_app, g
 from flask_mail import Message
 
 from app import mail, db
