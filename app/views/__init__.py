@@ -4,3 +4,8 @@
 # @IDE: PyCharm
 # @Create time: 1/9/21 5:05 PM
 # @Description:
+default_blueprints = [
+    frontend.frontend,
+]
+
+default_blueprints.extend(website.website_blueprints)

@@ -11,6 +11,7 @@ from flask import current_app
 from app import db
 from app.config.enum import COIN_TRADE_REASON, COIN_TRADE_TYPE, COIN_TYPE
 from app.models.user.user import User
+from app.utils.utils import format_date
 
 __all__ = ['CoinWallet', 'Trade', 'CoinTrade']
 
@@ -134,7 +135,7 @@ class CoinTrade(Trade):
         else:
             document.wallet.update(inc__cash=amount)
 
-        signals.coin_trade_confirmed.send('coin_trade_confirmed', trade=document)
+        Signals.coin_trade_confirmed.send('coin_trade_confirmed', trade=document)
 
     def to_json(self):
         return {
@@ -145,7 +146,7 @@ class CoinTrade(Trade):
             'type': self.kind,
             'reason': self.reason,
             'reason_id': self.reason_id,
-            'description': self.description or self.descs.get(self.reason, '')
+            'description': self.description or self.descs.get(self.reason, ''),
             'is_hold': False,
         }
 

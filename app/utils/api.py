@@ -8,6 +8,8 @@ from functools import wraps
 
 from flask import Response, g, render_template, make_response, jsonify, request, current_app, abort
 
+from app.utils.rate_limit import RateLimit
+
 
 def returns_json(func):
     @wraps(func)
@@ -37,7 +39,7 @@ def replace_func_with(func, version_specs, patch=False):
             if not any(match_spec(client, version, spec) for spec in version_specs):
                 return origin_func(*args, **kwargs)
 
-            if isinstance(func, basestring):
+            if isinstance(func, str):
                 new_func = get_func_from_str(func, args)
                 new_args = args[1:]
             else:
@@ -109,7 +111,7 @@ def match_spec(client, version, version_spec):
 
 def match_version(k, v, version):
     """
-
+    版本匹配
     :param k:
     :param v:
     :param version:
@@ -126,7 +128,7 @@ def match_version(k, v, version):
 
 def render_api_template(filename, *args, **kwargs):
     """
-
+    模板
     :param filename:
     :param args:
     :param kwargs:
@@ -134,10 +136,12 @@ def render_api_template(filename, *args, **kwargs):
     """
     filename = (g.get('client') or 'android') + '/' + filename
     return render_template(filename, *args, **kwargs)
+    # return render_template(filename, **kwargs)
 
 
 def cache_control(*directives):
     """
+    缓存控制
     insert a cache-control header with the given directives.
     :param directives:
     :return:
@@ -178,15 +182,19 @@ def open_json(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
         # invoke the wrapped function.
+        # 调用装饰函数
         rv = func(*args, **kwargs)
-        # the wrapped function can return the dictionary alone, or can also include a status code and / or headers. here we separate all these items.
+        # the wrapped function can return the dictionary alone, or can also include a status code and/or headers.
+        # here we separate all these items.
         status = None
         headers = None
+        # 判断类型是否是元组
         if isinstance(rv, tuple):
             rv, status, headers = rv + (None,) * (3 - len(rv))
+        # 状态类型为字典或列表
         if isinstance(status, (dict, list)):
             headers, status = status, None
-
+        # 对象不存在
         if rv is None:
             rv = jsonify({'status': 416, 'error': 'not match', 'message': 'object does not exist'})
             rv.status_code = 416
