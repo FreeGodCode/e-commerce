@@ -11,10 +11,11 @@ from itertools import chain
 from bson import ObjectId, json_util
 from flask import make_response, jsonify, request
 from flask_admin import expose
+from flask_login import current_user
 from mongoengine import Q
 
 from app.config import BASE_DIR
-from app.models.order.logistic import LogisticDetail, Logistic
+from app.models.order.logistic import LogisticDetail, Logistic, LogisticIrregular, LogisticRemark
 from app.models.order.order import Order
 from app.models.order.partner import Partner
 from app.models.user.address import Address
@@ -244,3 +245,148 @@ class N(AdminView):
             data.update({status: count})
 
         return jsonify(results=data)
+
+    @expose('/logistics_irregular/<process_status>/<irr_type>', methods=['GET'])
+    @expose('/logistics_irregular/<process_status>/', methods=['GET'])
+    @expose('/logistics_irregular', methods=['GET'])
+    def logistics_irregular(self, process_status=None, irr_type=None):
+        """
+
+        :param process_status:
+        :param irr_type:
+        :return:
+        """
+        utcnow = datetime.datetime.utcnow()
+        if process_status:
+            items_range = request.headers.get('Range', '0-9')
+            start, end = items_range.split('-')
+            query = restruct_query(request.args)
+            tracking_no = query.pop('tracking_no', '')
+            logistic = Logistic.objects(detail__irregular_details__process_status=process_status, **query).order_by('-detail.irregular_details.created_at')
+            if irr_type:
+                logistic = logistic.filter(detail__irregular_details__irr_type=irr_type).order_by('-detail.irregular_details.created_at')
+
+            if tracking_no:
+                logistic = logistic.filter(Q(detail__us_tracking_no=tracking_no) | Q(detail__cn_tracking_no=tracking_no))
+
+            data = logistic[int(start): int(end)]
+            data = [to_json(l) for l in data]
+            resp = make_response(json_util.dumps(data), 200)
+            resp.headers['Accept-Range'] = 'items'
+            resp.headers['Content-Range'] = '%s-%s/%s' % (start, end, logistic.count())
+            resp.headers['Content_Type'] = 'application/json'
+            return resp
+
+        data = {}
+        for status in ['WAITTING_PROCESS', 'PROCESSING', 'PROCESSED']:
+            logistic = Logistic.objects(detail__irregular_details_process_status=status)
+            data.udpate({status: logistic.count()})
+
+        return jsonify(results=data)
+
+    @expose('/update', methods=['PUT'])
+    def update(self):
+        """
+
+        :return:
+        """
+        query = request.get_json()
+        data = {}
+        for k, v in query.items():
+            if v in [None, 'None', '', 'null']:
+                continue
+            if 'date' in k:
+                val = datetime.datetime.strptime(v, '%Y-%m-%d')
+            elif k.startswith('real'):
+                val = float(v)
+            elif k == 'partner':
+                val = Partner.objects(name=v).first()
+            elif k == 'irregularity':
+                val = LogisticIrregular(irr_at_status=v.get('status'), irr_type=v.get('type'), reason=v.get('reason'), desc=v.get('desc'))
+            else:
+                val = v.strip()
+            data.update({k: val})
+
+        try:
+            logistic = Logistic.objects.get(id=data.pop('lid'))
+            logistic.update_logistic(data)
+            return jsonify(message='OK', remarks=logistic.detail.remarks, delays=logistic.detail.delay_details, irregularities=logistic.detail.irregular_details)
+        except Exception as e:
+            return jsonify(message='Failed', desc=e)
+
+    @expose('/update_delay', methods=['PUT'])
+    def update_delay(self):
+        """
+
+        :return:
+        """
+        query = request.get_json()
+        try:
+            logistic = Logistic.objects.get(id=query['lid'])
+            delays = logistic.detail.delay_details.filter(status=query['status'])
+            delays.update(is_done=query['is_done'])
+            logistic.save()
+            return jsonify(message='OK')
+        except Exception as e:
+            return jsonify(message='Failed', desc=e)
+
+    @expose('/update_irr_step', methods=['PUT'])
+    def update_irr_step(self):
+        """
+
+        :return:
+        """
+        query = request.get_json()
+        data = {}
+        for k, v in query.items():
+            data.update({k: v})
+
+        try:
+            logistic = Logistic.objects.get(id=data['lid'])
+            irregular = logistic.detail.irregular_details.filter(irr_type=data['irr_type']).first()
+            irregular.steps = data['solutions']
+            logistic.save()
+            return jsonify(message='OK', irr_detail=irregular)
+        except Exception as e:
+            return jsonify(message='Failed', desc=e)
+
+    @expose('/set_irr_done', methods=['PUT'])
+    def set_irr_done(self):
+        """
+
+        :return:
+        """
+        query = request.get_json()
+        data = {}
+        for k, v in query.items():
+            data.update({k: v})
+
+        try:
+            logistic = Logistic.objects.get(id=data['lid'])
+            irregular = logistic.detail.irregular_details.filter(irr_type=data['irr_type']).first()
+            irregular.process_status = data['process_status']
+            logistic.save()
+            return jsonify(message='OK', irr_detail = irregular)
+        except Exception as e:
+            return jsonify(message='OK', desc=e)
+
+    @expose('/update_irr_remark', methods=['PUT'])
+    def update_irr_remark(self):
+        """
+
+        :return:
+        """
+        query = request.get_json()
+        data = {}
+        for k, v in query.items():
+            data.update({k: v})
+
+        try:
+            logistic = Logistic.objects.get(id=data['lid'])
+            irregular = logistic.detail.irregular_details.filter(irr_type=data['irr_type']).first()
+            remark = LogisticRemark(content=data['irr_remark'], creator=current_user.name)
+            irregular.remarks.append(remark)
+            logistic.save()
+            return jsonify(message='OK', irr_detail=irregular)
+        except Exception as e:
+            return jsonify(message='Failed', desc=e)
