@@ -28,7 +28,7 @@ class FavorAction(object):
     def mark_favored(self, item):
         if item.id not in self.favor_items:
             item.update(inc__num_favors=1, push__favor_items=item.id)
-            signals.mark_favor.send(self, item_id=str(item.id))
+            Signals.mark_favor.send(self, item_id=str(item.id))
 
     def unmark_favored(self, item):
         if item.id in self.favor_items:

@@ -2,7 +2,7 @@
 # @Author: ty
 # @File name: permission.py 
 # @IDE: PyCharm
-# @Create time: 1/11/21 3:45 PM
+# @Create time: 1/19/21 11:48 AM
 # @Description:
 from app import db
 

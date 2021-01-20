@@ -4,6 +4,8 @@
 # @IDE: PyCharm
 # @Create time: 1/9/21 5:05 PM
 # @Description:
+from app.views.frontend import frontend
+
 default_blueprints = [
     frontend.frontend,
 ]
