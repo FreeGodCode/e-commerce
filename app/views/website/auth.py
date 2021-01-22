@@ -5,12 +5,14 @@
 # @Create time: 1/21/21 11:24 PM
 # @Description:
 import time
+from uuid import uuid4
 
-from flask import Blueprint, current_app, jsonify, request
-from flask_login import current_user, logout_user, login_user
+from flask import Blueprint, current_app, jsonify, request, render_template
+from flask_babel import gettext
+from flask_login import current_user, logout_user, login_user, login_required
 
 from app.config.settings import SOCIALOAUTH_SITES
-from app.models.user.user import SocialOAuth
+from app.models.user.user import SocialOAuth, User
 
 auth = Blueprint('auth', __name__, url_prefix='/api/auth', static_folder='../../../static', template_folder='../../../templates')
 
@@ -136,3 +138,145 @@ def callback(sitename):
         else:
             user_id = str(oauth.user.id)
             return jsonify(message='OK', login=False, user_id=user_id)
+
+
+@auth.route('/login_email', methods=['POST'])
+def login_email():
+    """
+
+    :return:
+    """
+    data = request.json
+    email = data.get('email', '')
+    user, authenticated = User.authenticate(email=email, password=data.get('password', ''))
+    if not authenticated:
+        return jsonify(message='Failed')
+    login_user(user, remember=True)
+    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+
+
+@auth.route('/login_with_token', methods=['POST'])
+def login_with_token():
+    """
+
+    :return:
+    """
+    data = request.json
+    token = data.get('token', '')
+    user = User.verify_auth_token(token)
+    if not user:
+        return jsonify(message='Failed')
+    login_user(user, remember=True)
+    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+
+
+@auth.route('/add_oauth/<sitename>', methods=['GET'])
+@login_required
+def add_another_oauth(sitename):
+    """
+
+    :param sitename:
+    :return:
+    """
+    user = current_user._get_current_object()
+    # 已存在
+    if SocialOAuth.objects(user=user, site=sitename):
+        return jsonify(message='Failed', error=gettext('multi oauth of same site'))
+    if '_app' in sitename:
+        site, msg = parse_token_response(sitename, request.args)
+    else:
+        code = request.args.get('code')
+        sitename, msg = get_oauth_token(sitename, code)
+
+    if site is None:
+        return jsonify(message='Failed', error=msg)
+
+    oauth = SocialOAuth.objects.get_or_create(site_uid=site.id, site=site.site_name, defaults={'access_token': site.access_token})
+    oauth.re_auth(site.access_token, site.expires_in, site.refresh_token)
+    add_oauth(current_user, oauth)
+    return jsonify(message='OK')
+
+
+@auth.route('/signup', methods=['POST'])
+def email_signup():
+    """
+    邮箱注册
+    :return:
+    """
+    data = request.json
+    name = data.get('name')
+    email = data.get('email', '')
+    password = data.get('password', '')
+    if not password:
+        return jsonify(message='Failed', error=gettext('please fill in.'))
+    if User.objects(account__email=email):
+        return jsonify(message='Failed', error=gettext('this name has been registered.'))
+    if not name:
+        name = 'maybe' + str(time.time()).replace('.', '')
+    user = User.create(name=name, email=email, password=password)
+    login_user(user, remember=True)
+    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+
+
+@auth.route('/bind_email', methods=['POST'])
+def bind_email():
+    """
+
+    :return:
+    """
+    email = request.json.get('email')
+    user_id = request.json.get('user_id')
+    if not email:
+        return jsonify(message='Failed', error=gettext('no email'))
+    if User.objects(account__email=email):
+        return jsonify(message='Failed', error=gettext('the email alreadly exists'))
+    user = User.objects(id=user_id).first()
+    user.account.email = email
+    user.account.is_email_verified = True
+    user.save()
+    login_user(user, remember=True)
+    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+
+
+@auth.route('/change_password', methods=['POST'])
+@login_required
+def change_password():
+    """
+
+    :return:
+    """
+    original_password = request.json.get('original_password', '')
+    user = current_user._get_current_object()
+    if not user.account.check_password(original_password):
+        return jsonify(message='Failed', error=gettext('wrong password'))
+
+    password = request.form.get('password', '')
+    if not password.isalnum():
+        return jsonify(message='Failed', error=gettext('password contains illegal characters'))
+    if len(password) < 6:
+        return jsonify(message='Failed', error=gettext('password is too short'))
+    update_password(user, password)
+    return jsonify(message='OK')
+
+
+@auth.route('/forget_password', methods=['POST'])
+def forget_password():
+    """
+
+    :return:
+    """
+    email = request.json.get('email', '')
+    if not email:
+        return jsonify(message='Failed', error=gettext('please correct the email format'))
+
+    user = User.objects(account__email=email).first()
+    if not user:
+        return jsonify(message='Failed', error=gettext('sorry, no user found for that email address'))
+
+    user.account.activation_key = str(uuid4())
+    user.save()
+    url = 'http://account.maybe.cn/account/confirm_reset_password?activation_key=%s&email=%s' % (user.account.activation_key, user.account.email)
+    html = render_template('admin/user/_reset_password.html', username=user.name, url=url)
+    jobs.notification.send_mail.delay([user.account.email], gettext('reset your password in ') + 'maybe', html=html)
+    return jsonify(message='OK')
+
