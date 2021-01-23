@@ -22,7 +22,7 @@ def args_cache_key(*args, **kwargs):
         _args[k] = v
     _args.pop('session_key', None)
     args = str(hash(frozenset(_args.items()))) + str(request.is_xhr)
-    lang = get_locale()
+    # lang = get_locale()
     # return (path + args + lang).encode('utf-8')
     return path + args
 

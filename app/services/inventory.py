@@ -12,6 +12,7 @@ from app.models.inventory.brand import Brand
 from app.models.inventory.item import ItemSpec, Item
 from app.models.order.entry import OrderEntry
 from app.models.order.snapshot import ItemSnapshot, ItemSpecSnapshot
+from app.services.bingtrans import MSTranslate
 
 
 def get_specs_info(skus):
@@ -39,7 +40,7 @@ def get_spec_info(sku):
     brand_json = brand and brand.to_json() or ''
     return {
         'sku': sku,
-        'found': True
+        'found': True,
         'item_id': spec.item_id,
         'title': item.title,
         'brand': brand_json,

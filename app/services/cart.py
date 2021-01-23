@@ -8,6 +8,7 @@ import datetime
 from collections import Counter
 
 from app.models.cart.cart import Cart, CartEntry, EntrySpec
+from app.services.inventory import get_specs_info
 
 
 def _get_cart(user_id, session_key):
