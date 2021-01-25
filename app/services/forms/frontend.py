@@ -6,7 +6,7 @@
 # @Description:
 from flask_wtf import Form
 from flask import Markup
-from wtforms import HiddenField, TextField, PasswordField, SubmitField, BooleanField
+from wtforms import HiddenField, PasswordField, SubmitField, BooleanField, TextField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 
@@ -23,7 +23,7 @@ class LoginForm(Form):
 
 
 class SignupForm(Form):
-    """注册表单"""
+    """注册表单类"""
     # pass
     next = HiddenField()
     email = EmailField('email', [DataRequired(), Email()], description='your email address')
@@ -34,12 +34,11 @@ class SignupForm(Form):
 
     def validate_name(self, field):
         if User.objects(name=field.data).first() is not None:
-            raise ValidationError('this username is taken')
+            raise ValidationError('此用户名已存在')
 
     def validate_email(self, field):
         if User.objects(account__email=field.data).first() is not None:
-            raise ValidationError('this email is taken')
-
+            raise ValidationError('此邮箱已被注册')
 
 
 class RecoverPasswordForm(Form):
