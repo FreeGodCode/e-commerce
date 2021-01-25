@@ -7,8 +7,8 @@
 import itertools
 import re
 
-from app.config.enum import ORDER_TYPE
-from app.config.order_status import ORDER_STATUS_DESCRIPTION, ROUTES
+from app.config.enum import ORDER_TYPE, LOG_STATUS
+from app.config.order_status import ORDER_STATUS_DESCRIPTION, ROUTES, SHIPPING_HISTORY
 from app.models.order.express import ExpressTracking
 from app.models.order.order import Payment
 from app.models.order.partner import LogisticProvider
@@ -133,7 +133,7 @@ def logistic_json(logistic, order_type):
     current_status = logistic.detail.status
 
     history = []
-    for status in LOGISTIC_SATAUS:
+    for status in LOG_STATUS:
         detail_field = logistic.detail.attr_by_log_status[status]
         value = getattr(logistic.detail, detail_field)
         if not value:
@@ -146,7 +146,7 @@ def logistic_json(logistic, order_type):
 
         # tracking information
         tracking = None
-        if status == LOGISTIC_STATUS.SHIPPING and logistic.detail.cn_logistic_name:
+        if status == LOG_STATUS.SHIPPING and logistic.detail.cn_logistic_name:
             history.append(dict(desc='国际快递公司: %s' % logistic.detail.cn_logistic_name.upper(),
                                 time='国际快递单号: %s' % logistic.detail.cn_tracking_no, ))
             tracking = ExpressTracking.find(company=logistic.detail.n_logistic_name,
