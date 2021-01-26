@@ -11,6 +11,8 @@ from app.config.enum import COUPON_SCOPE, COUPON_TYPES, COUPON_APPLY
 
 __all__ = ['Coupon']
 
+from app.utils.utils import format_date
+
 
 class Coupon(db.Document):
     meta = {

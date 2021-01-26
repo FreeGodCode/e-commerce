@@ -11,6 +11,7 @@ from app import db
 __all__ = ['Banner']
 
 from app.models.content.board import Board
+from app.utils.utils import format_date
 
 
 class Banner(db.Document):

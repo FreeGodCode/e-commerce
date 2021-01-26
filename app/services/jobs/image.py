@@ -130,5 +130,3 @@ def save_avatar(space, path, url, save_original=False, async=True):
             k.set_contents_from_string(output.getvalue())
             k.make_public()
             output.close()
-
-

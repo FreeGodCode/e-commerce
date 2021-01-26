@@ -23,7 +23,7 @@ from app.models.inventory.statistics import Statistics
 from app.models.inventory.tag import Tag
 
 from app.models.inventory.vendor import Vendor
-
+from app.utils.utils import update_modified
 
 class Item(db.Document):
     """"""

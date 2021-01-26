@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 
 from app.models.content.banner import Banner
 from app.models.content.board import Board
+from app.services import jobs
 from app.utils.utils import redirect_url
 from app.views.admin import AdminView
 

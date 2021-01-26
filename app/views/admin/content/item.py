@@ -6,6 +6,7 @@
 # @Description:
 import os
 import time
+from collections import defaultdict
 from math import ceil
 from urllib import parse
 from uuid import uuid4
@@ -21,6 +22,9 @@ from app.config.price import COST_PRICE, CURRENT_PRICE, ORIGIN_PRICE
 from app.models.inventory.category import Category
 from app.models.inventory.item import Item, ItemSpec
 from app.models.inventory.statistics import Statistics
+from app.services import jobs
+from app.services.bingtrans import MSTranslate
+from app.services.cache import cached
 from app.views.admin import AdminView
 
 num_per_page = 50

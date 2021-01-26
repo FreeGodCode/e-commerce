@@ -12,9 +12,16 @@ from flask_login import UserMixin
 from itsdangerous import TimedJSONWebSignatureSerializer
 
 from app import db, bcrypt
-from app.config.enum import USER_GENDER
+from app.config.enum import USER_GENDER, USER_ROLE, NOTIFICATION_TYPE
 
 __all__ = ['User', 'UserInformation', 'UserAccount', 'FavorAction', 'SocialOAuth']
+
+from app.models.cart.cart import Cart
+from app.models.coupon.wallet import CouponWallet
+
+from app.models.order.order import Order
+
+from app.models.reward.coin import CoinWallet
 
 
 class FavorAction(object):
@@ -203,7 +210,7 @@ class User(db.Document, UserMixin, FavorAction):
         account = UserAccount(email=email.lower(), mobile_number=mobile_number, is_email_verified=True)
         account.password = password
 
-        user = User(name=name, roles=[USER_ROLE.MEMBER], information=UserINformation(), cart=cart, wallet=wallet,
+        user = User(name=name, roles=[USER_ROLE.MEMBER], information=UserInformation(), cart=cart, wallet=wallet,
                     account=account)
         user.save()
         signals.user_signup.send('system', user=user)

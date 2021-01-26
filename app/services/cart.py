@@ -9,6 +9,7 @@ from collections import Counter
 
 from app.models.cart.cart import Cart, CartEntry, EntrySpec
 from app.services.inventory import get_specs_info
+from app.services.json_templ.cart import cart_json
 
 
 def _get_cart(user_id, session_key):
