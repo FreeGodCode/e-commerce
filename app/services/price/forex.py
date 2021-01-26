@@ -25,7 +25,7 @@ class OpenExchangeRatesClient(object):
 
     def latest(self, base='USD'):
         """
-
+        fetches latest exchange rate data from service
         :param base:
         :return:
         """
@@ -37,6 +37,10 @@ class OpenExchangeRatesClient(object):
         return resp.json(parse_int=decimal.Decimal, parse_float=decimal.Decimal)
 
     def currencies(self):
+        """
+        fetches current currency data of the service
+        :return:
+        """
         try:
             resp = self.client.get(self.ENDPOINT_CURRENCIES)
         except requests.exceptions.RequestException as e:
@@ -45,6 +49,12 @@ class OpenExchangeRatesClient(object):
         return resp.json()
 
     def historical(self, date, base='USD'):
+        """
+        fetches historical exchange rate data from service
+        :param date:
+        :param base:
+        :return:
+        """
         try:
             resp = self.client.get(self.ENDPOINT_HISTORICAL % date.strftime('%Y-%m-%d'), params={'base': base})
             resp.raise_for_status()
