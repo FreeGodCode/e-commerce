@@ -12,6 +12,7 @@ from mongoengine import queryset_manager, DoesNotExist
 from app import db
 from app.config.enum import POST_TAG_TYPES, POST_STATUS, NOTIFICATION_TYPE, ACTIVITY_STATUS
 from app.models.user.user import User
+from app.utils import update_modified
 
 __all__ = ['Post', 'PostComment', 'PostLike', 'PostFeedback', 'PostActivity', 'PostTag', '']
 
