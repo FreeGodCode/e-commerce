@@ -17,6 +17,7 @@ from flask_admin import expose
 from flask_babel import gettext
 from flask_login import current_user
 
+from app import admin
 from app.config import BASE_DIR, UEDITOR_CONFIG
 from app.config.price import COST_PRICE, CURRENT_PRICE, ORIGIN_PRICE
 from app.models.inventory.category import Category
@@ -377,5 +378,4 @@ class I(AdminView):
         return jsonify(result)
 
 
-admin.add_view(
-    I(name=gettext('Item Backend'), category=gettext('Content'), menu_icon_type='fa', menu_icon_value='gift'))
+admin.add_view(I(name=gettext('Item Backend'), category=gettext('Content'), menu_icon_type='fa', menu_icon_value='gift'))

@@ -8,6 +8,7 @@ from flask import Blueprint, jsonify, session, request
 from flask_login import user_logged_in, current_user
 
 from app.models.user.guest import GuestRecord
+from app.services.cart import merge_carts, get_cart, update_cart_entry, remove_from_cart, empty_cart
 from app.utils.utils import get_session_key
 
 cart = Blueprint('cart', __name__, url_prefix='/api/cart', static_folder='../../../static',
@@ -53,7 +54,7 @@ def get_user_id_for_cart():
     return user_id, session_key
 
 
-@ cart.route('/', methods=['GET'])
+@cart.route('/', methods=['GET'])
 def check_cart():
     """
 
@@ -62,6 +63,7 @@ def check_cart():
     user_id, session_key = get_user_id_for_cart()
     cart = get_cart(user_id, session_key)
     return jsonify(message='OK', cart=cart)
+
 
 @cart.route('/add/<int:spec_id>', methods=['POST'])
 def add_cart(spec_id):
@@ -72,7 +74,7 @@ def add_cart(spec_id):
     """
     user_id, session_key = get_user_id_for_cart()
     quantity = int(request.json.get('quantity', 1))
-    res = update_cart_entry(spec_id, quantity, incr_quantity=False, uses_id=user_id, session_key=session_key)
+    res = update_cart_entry(spec_id, quantity, incr_quantity=False, user_id=user_id, session_key=session_key)
     return jsonify(message='OK', cart=res)
 
 
@@ -87,6 +89,7 @@ def remove_entries_from_cart():
     res = remove_from_cart(skus, user_id, session_key)
     return jsonify(message='OK', cart=res)
 
+
 @cart.route('/entry/<int:entry_id>/update', methods=['POST'])
 def update_entry(entry_id):
     """
@@ -98,6 +101,7 @@ def update_entry(entry_id):
     user_id, session_key = get_user_id_for_cart()
     res = update_cart_entry(entry_id, quantity, incr_quantity=False, user_id=user_id, session_key=session_key)
     return jsonify(message='OK', cart=res)
+
 
 @cart.route('/empty', methods=['GET'])
 def cart_empty():

@@ -9,6 +9,7 @@ from flask_babel import gettext
 from flask_login import login_required, current_user
 
 from app.models.user.address import Address
+from app.services.cache import cached
 
 address = Blueprint('address', __name__, url_prefix='/api/address', static_folder='../../../static',
                     template_folder='../../../templates')

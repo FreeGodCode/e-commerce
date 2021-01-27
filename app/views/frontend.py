@@ -9,14 +9,18 @@ import uuid
 
 from flask import Blueprint, url_for, redirect, make_response, request, jsonify, flash, render_template, current_app, \
     session, Response
+from flask_admin.menu import MenuLink
 from flask_babel import gettext
 from flask_login import current_user, login_user, confirm_login, login_required, logout_user, login_fresh, \
     fresh_login_required
 from mongoengine import Q
 
-from app import login_manager
+from app import login_manager, admin
 from app.config import BASE_DIR
 from app.models.user.user import User
+from app.services import jobs
+from app.services.forms import ReauthForm, ConfirmResetPasswordForm, ChangePasswordForm, RecoverPasswordForm
+from app.views.admin import AuthenticatedMenuLink, NotAuthenticatedMenuLink
 
 frontend = Blueprint('frontend', __name__, url_prefix='', static_folder='../static',
                      template_folder='../templates')
@@ -229,7 +233,7 @@ def reset_password():
             # TODO: change project name
             url = 'http://bigbang.maybe.cn/admin/confirm_reset_password?activation_key=%s&email=%s'%(user.account.activation_key, user.account.email)
             html = render_template('admin/user/_reset_password.html', project=current_app.config['PROJECT'], username=user.name, url=url)
-            Jobs.notification.send_mail.delay([user.account.email], gettext('reset your password in ') + 'Maybe', html)
+            jobs.notification.send_mail.delay([user.account.email], gettext('reset your password in ') + 'Maybe', html)
             return render_template('admin/user/reset_password.html', form=form)
         else:
             flash(gettext('sorry, no user found for that email address'), 'error')

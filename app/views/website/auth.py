@@ -4,6 +4,7 @@
 # @IDE: PyCharm
 # @Create time: 1/21/21 11:24 PM
 # @Description:
+
 import time
 from uuid import uuid4
 
@@ -13,6 +14,9 @@ from flask_login import current_user, logout_user, login_user, login_required
 
 from app.config.settings import SOCIALOAUTH_SITES
 from app.models.user.user import SocialOAuth, User
+from app.services import jobs, json_templ
+from app.services.cache import cached
+from app.services.user import add_oauth
 
 auth = Blueprint('auth', __name__, url_prefix='/api/auth', static_folder='../../../static', template_folder='../../../templates')
 
@@ -65,7 +69,7 @@ def user_info():
     if not current_user.is_authenticated:
         return jsonify(message='Failed', logged_in=False)
 
-    info = json.get_user_info(current_user)
+    info = json_templ.get_user_info(current_user)
     return jsonify(message='OK', logged_in=True, user=info)
 
 
@@ -133,7 +137,7 @@ def callback(sitename):
         oauth.re_auth(site.access_token, site.expires_in, site.refresh_token, getattr(site, 'unionid', None))
         if oauth.user.account.is_email_verified:
             login_user(oauth.user, remember=True)
-            return jsonify(message='OK', login=True, remember_token=oauth.user.generate_auth_token(), user=json.get_user_info(oauth.user))
+            return jsonify(message='OK', login=True, remember_token=oauth.user.generate_auth_token(), user=json_templ.get_user_info(oauth.user))
 
         else:
             user_id = str(oauth.user.id)
@@ -152,7 +156,7 @@ def login_email():
     if not authenticated:
         return jsonify(message='Failed')
     login_user(user, remember=True)
-    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+    return jsonify(message='OK', user=json_templ.get_user_info(user), remember_token=user.generate_auth_token())
 
 
 @auth.route('/login_with_token', methods=['POST'])
@@ -167,7 +171,7 @@ def login_with_token():
     if not user:
         return jsonify(message='Failed')
     login_user(user, remember=True)
-    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+    return jsonify(message='OK', user=json_templ.get_user_info(user), remember_token=user.generate_auth_token())
 
 
 @auth.route('/add_oauth/<sitename>', methods=['GET'])
@@ -215,7 +219,7 @@ def email_signup():
         name = 'maybe' + str(time.time()).replace('.', '')
     user = User.create(name=name, email=email, password=password)
     login_user(user, remember=True)
-    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+    return jsonify(message='OK', user=json_templ.get_user_info(user), remember_token=user.generate_auth_token())
 
 
 @auth.route('/bind_email', methods=['POST'])
@@ -235,7 +239,7 @@ def bind_email():
     user.account.is_email_verified = True
     user.save()
     login_user(user, remember=True)
-    return jsonify(message='OK', user=json.get_user_info(user), remember_token=user.generate_auth_token())
+    return jsonify(message='OK', user=json_templ.get_user_info(user), remember_token=user.generate_auth_token())
 
 
 @auth.route('/change_password', methods=['POST'])

@@ -4,6 +4,9 @@
 # @IDE: PyCharm
 # @Create time: 1/9/21 7:10 PM
 # @Description:
+from app import views
+
+
 def init_blueprints(app, app_name, blueprints):
     """
     initial blueprints in views.

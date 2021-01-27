@@ -10,6 +10,9 @@ from redis import ConnectionPool
 
 from app import db, mongo_inventory, redis, session_redis, migrate, mail, cache, admin, bcrypt, babel, toolbar, assets, \
     login_manager, principal
+from app.models.user.user import User
+from app.redis_session_interface import RedisSessionInterface
+from app.services.permission import principal_on_identity_loaded
 
 
 def init_extensions(app):

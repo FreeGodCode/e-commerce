@@ -4,6 +4,9 @@
 # @IDE: PyCharm
 # @Create time: 1/9/21 7:14 PM
 # @Description:
+from app.utils import *
+
+
 def init_template_filters(app):
     """
 

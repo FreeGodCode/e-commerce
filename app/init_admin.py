@@ -5,6 +5,7 @@
 # @Create time: 1/9/21 7:14 PM
 # @Description:
 from app import admin
+from app.views.admin.dashboard import IndexView
 
 
 def init_admin(app):

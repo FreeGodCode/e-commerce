@@ -13,8 +13,14 @@ from app.models.order.entry import OrderEntry
 from app.models.order.logistic import Logistic
 from app.models.order.order import Order, TransferOrderCode
 from app.models.user.address import Address
+from app.services import json_templ
+from app.services.cart import entry_info_from_ids, remove_from_cart
+from app.services.inventory import import_entries
+from app.services.logistic import logistic_provider_dispatcher
+from app.services.price import FakeCart
 
 order = Blueprint('orders', __name__, url_prefix='/api/orders', static_folder='../../../static', template_folder='../../../templates')
+
 
 def unpaid_orders(user_id):
     """
@@ -23,7 +29,8 @@ def unpaid_orders(user_id):
     :return:
     """
     orders = Order.payment_pending(customer_id=user_id)
-    return [json.simple_order_json(order) for order in orders]
+    return [json_templ.simple_order_json(order) for order in orders]
+
 
 def logistic_orders(user_id):
     """
@@ -32,7 +39,8 @@ def logistic_orders(user_id):
     :return:
     """
     orders = Order.processing(customer_id=user_id)
-    return [json.simple_order_json(order) for order in orders]
+    return [json_templ.simple_order_json(order) for order in orders]
+
 
 @order.route('/<order_type>', methods=['GET'])
 @login_required
@@ -48,7 +56,8 @@ def get_orders(order_type):
         orders = Order.transfer(customer_id=current_user.id)
     else:
         return jsonify(message='Failed')
-    return jsonify(message='OK', orders=[json.simple_order_json(order) for order in orders])
+    return jsonify(message='OK', orders=[json_templ.simple_order_json(order) for order in orders])
+
 
 @order.route('/cal_entries_price', methods=['POST'])
 @login_required
@@ -74,8 +83,9 @@ def cal_entries_price():
     cart.coupon_codes = data.get('coupon_codes', [])
 
     price = cal_entries_price(cart)
-    result = json.order_price_json(price)
+    result = json_templ.order_price_json(price)
     return jsonify(message='OK', order=result)
+
 
 @order.route('/get/<order_id>', methods=['GET'])
 @login_required
@@ -86,7 +96,8 @@ def get_order(order_id):
     :return:
     """
     order = Order.objects(id=order_id).first_or_404()
-    return jsonify(message='OK', order=json.order_json(order))
+    return jsonify(message='OK', order=json_templ.order_json(order))
+
 
 @order.route('/del/<order_id>', methods=['GET'])
 @login_required
@@ -102,6 +113,7 @@ def delete_order(order_id):
 
     order.cancel_order('user delete', 'ORDER_DELETED')
     return jsonify(message='OK')
+
 
 @order.route('/secret/verify_and_move/<int:code>', methods=['GET'])
 @login_required
@@ -120,7 +132,8 @@ def move_order_to_self(code):
     order.save()
 
     order_code.delete()
-    return jsonify(message='OK', order=json.order_json(order))
+    return jsonify(message='OK', order=json_templ.order_json(order))
+
 
 @order.route('/logistics/<logistic_id>', methods=['GET'])
 @login_required
@@ -133,7 +146,7 @@ def get_logistic(logistic_id):
     logistic = Logistic.objects(id=logistic_id).first_or_404()
     express = logistic.express_tracking
     logistic_obj = {'id': str(logistic.id)}
-    logistic_obj['entries'] = [json.entry_json(entry) for entry in logistic.entries]
+    logistic_obj['entries'] = [json_templ.entry_json(entry) for entry in logistic.entries]
     logistic_obj['status'] = logistic.detail.status
     logistic_obj['data'] = logistic.to_json()
     logistic_obj['history'] = logistic.shipping_history
@@ -141,6 +154,7 @@ def get_logistic(logistic_id):
     logistic_obj['address'] = logistic.order.address.to_json()
     logistic_obj['payment_status'] = logistic.order.goods_payment.status
     return jsonify(message='OK', logistic=logistic_obj)
+
 
 @order.route('/create_order', methods=['POST'])
 @login_required
@@ -177,6 +191,7 @@ def create_order():
     remove_from_cart([entry.item_spec_snapshot.sku for entry in order.entries], user_id=str(current_user.id))
     return jsonify(message='OK', order_id=str(order.id), order=order.to_grouped_json())
 
+
 @order.route('/create_transfer_order', methods=['POST'])
 @login_required
 def create_transfer_order():
@@ -204,6 +219,7 @@ def create_transfer_order():
 
     logistic_provider_dispatcher(order)
     return jsonify(message='OK', order_id=str(order.id), order=order.to_grouped_json())
+
 
 @order.route('/update_transfer_order', methods=['POST'])
 @login_required
@@ -233,8 +249,9 @@ def update_transfer_order():
     order.address = address
     order.update_amount()
     order.reload()
-    result = json.transfer_order_price_json(order)
+    result = json_templ.transfer_order_price_json(order)
     return jsonify(message='OK', order=result)
+
 
 @order.route('/cal_order_price', methods=['POST'])
 @login_required
@@ -260,8 +277,9 @@ def cal_order_price():
     order.address = address
 
     price = cal_order_price(order)
-    result = json.transfer_order_price_json(price)
+    result = json_templ.transfer_order_price_json(price)
     return jsonify(message='OK', order=result)
+
 
 @order.route('/fill_shipping_info', methods=['POST'])
 @login_required

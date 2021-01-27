@@ -11,6 +11,14 @@ from app.models.log import log
 from app.models.order import order
 from app.models.permission import permission
 from app.models.user import user
+from .user import *
+from .cart import *
+from .content import *
+from .coupon import *
+from .inventory import *
+from .log import *
+from .permission import *
+from .reward import *
 
 
 def all():

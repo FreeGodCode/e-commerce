@@ -14,6 +14,9 @@ from flask_mail import Message
 from app import mail
 from app.models.order.order import Order
 from app.models.user.user import User
+from app.services import json_templ, jobs
+from app.services.cart import entry_info_from_ids
+from app.services.price import FakeCart, cal_order_price, PRICE_FN
 from app.utils.utils import get_session_key, paginate
 
 user = Blueprint('user', __name__, url_prefix='/api/users', static_folder='../../../static',
@@ -162,7 +165,7 @@ def update_avatar():
         user = current_user._get_current_object()
         user.avatar_url = url
         user.save()
-    return jsonify(message='OK', user=json.get_user_info(user))
+    return jsonify(message='OK', user=json_templ.get_user_info(user))
 
 
 @user.route('/update_username', methods=['POST'])
@@ -179,7 +182,7 @@ def update_username():
         user = current_user._get_current_object()
         user.name = username
         user.save()
-        return jsonify(message='OK', user=json.get_user_info(user))
+        return jsonify(message='OK', user=json_templ.get_user_info(user))
     return jsonify(message='Failed', error='参数不对')
 
 
@@ -191,7 +194,7 @@ def user_info(user_id):
     :return:
     """
     user = User.objects(id=user_id).first_or_404()
-    return jsonify(message='OK', user=json.user_json(user))
+    return jsonify(message='OK', user=json_templ.user_json(user))
 
 
 @user.route('/follow/<follow_id>', methods=['GET'])
@@ -236,7 +239,7 @@ def user_followers():
     user = User.objects(id=user_id).first_or_404()
     followers = user.followers
     users = paginate(followers, page, per_page)
-    return jsonify(message='OK', users=[json.user_json(u) for u in users])
+    return jsonify(message='OK', users=[json_templ.user_json(u) for u in users])
 
 
 @user.route('/followings', methods=['GET'])
@@ -254,4 +257,4 @@ def user_followings():
     followings = user.followings
     users = paginate(followings, page, per_page)
 
-    return jsonify(message='OK', users=[json.user_json(u) for u in users])
+    return jsonify(message='OK', users=[json_templ.user_json(u) for u in users])

@@ -12,6 +12,7 @@ from flask_babel import gettext
 from mongoengine import ValidationError
 from werkzeug.utils import secure_filename
 
+from app import admin
 from app.models.content.banner import Banner
 from app.models.content.board import Board
 from app.services import jobs

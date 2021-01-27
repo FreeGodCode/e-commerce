@@ -4,7 +4,26 @@
 # @IDE: PyCharm
 # @Create time: 1/19/21 11:09 AM
 # @Description:
-import app.models as Models
+from app import admin
+from app.models.cart.cart import Cart, EntrySpec
+from app.models.content.board import Board
+from app.models.content.post import Post, PostComment, PostLike, PostActivity, PostFeedback, PostTag
+from app.models.coupon.coupon import Coupon
+from app.models.coupon.wallet import CouponWallet
+from app.models.inventory.brand import Brand
+from app.models.inventory.category import Category
+from app.models.inventory.item import Item, ItemSpec
+from app.models.inventory.price import PriceHistory, ForexRate
+from app.models.inventory.tag import Tag
+from app.models.inventory.vendor import Vendor
+from app.models.order.entry import OrderEntry
+from app.models.order.order import Payment, Order, TransferOrderCode, OrderExtra
+from app.models.order.partner import LogisticProvider, ChannelProvider, Partner
+from app.models.permission.permission import BackendPermission, Role
+from app.models.reward.coin import CoinWallet, CoinTrade
+from app.models.user.address import Address
+from app.models.user.guest import GuestRecord
+from app.models.user.user import User, SocialOAuth
 from app.views.admin import MBModelView
 
 
@@ -24,42 +43,42 @@ class LoginView(MBModelView):
     column_filters = ('log_type',)
 
 
-admin.add_view(MBModelView(Models.BackendPermission, category='Admin'))
-admin.add_view(MBModelView(Models.Role, category='Admin'))
+admin.add_view(MBModelView(BackendPermission, category='Admin'))
+admin.add_view(MBModelView(Role, category='Admin'))
 
-admin.add_view(UserView(Models.User, category='User', endpoint='usermodel'))
-admin.add_view(MBModelView(Models.SocialOAuth, category='User'))
-admin.add_view(MBModelView(Models.Cart, category='User', endpoint='cartmodel'))
-admin.add_view(MBModelView(Models.EntrySpec, category='User'))
-admin.add_view(MBModelView(Models.Coupon, category='User'))
-admin.add_view(MBModelView(Models.CouponWallet, category='User'))
-admin.add_view(MBModelView(Models.OrderEntry, category='User'))
-admin.add_view(MBModelView(Models.CoinWallet, category='User'))
-admin.add_view(MBModelView(Models.CoinTrade, category='User'))
-admin.add_view(MBModelView(Models.Address, category='User', endpoint='addressmodel'))
-admin.add_view(MBModelView(Models.GuestRecord, category='User'))
+admin.add_view(UserView(User, category='User', endpoint='usermodel'))
+admin.add_view(MBModelView(SocialOAuth, category='User'))
+admin.add_view(MBModelView(Cart, category='User', endpoint='cartmodel'))
+admin.add_view(MBModelView(EntrySpec, category='User'))
+admin.add_view(MBModelView(Coupon, category='User'))
+admin.add_view(MBModelView(CouponWallet, category='User'))
+admin.add_view(MBModelView(OrderEntry, category='User'))
+admin.add_view(MBModelView(CoinWallet, category='User'))
+admin.add_view(MBModelView(CoinTrade, category='User'))
+admin.add_view(MBModelView(Address, category='User', endpoint='addressmodel'))
+admin.add_view(MBModelView(GuestRecord, category='User'))
 
-admin.add_view(MBModelView(Models.Item, category='Inventory', endpoint='itemmodel'))
-admin.add_view(MBModelView(Models.ItemSpec, category='Inventory'))
-admin.add_view(MBModelView(Models.Brand, category='Inventory'))
-admin.add_view(MBModelView(Models.Category, category='Inventory'))
-admin.add_view(MBModelView(Models.Tag, category='Inventory'))
-admin.add_view(MBModelView(Models.Vendor, category='Inventory'))
-admin.add_view(MBModelView(Models.PriceHistory, category='Inventory'))
-admin.add_view(MBModelView(Models.ForexRate, category='Inventory'))
+admin.add_view(MBModelView(Item, category='Inventory', endpoint='itemmodel'))
+admin.add_view(MBModelView(ItemSpec, category='Inventory'))
+admin.add_view(MBModelView(Brand, category='Inventory'))
+admin.add_view(MBModelView(Category, category='Inventory'))
+admin.add_view(MBModelView(Tag, category='Inventory'))
+admin.add_view(MBModelView(Vendor, category='Inventory'))
+admin.add_view(MBModelView(PriceHistory, category='Inventory'))
+admin.add_view(MBModelView(ForexRate, category='Inventory'))
 
-admin.add_view(MBModelView(Models.Payment, category='Order', endpoint='paymentmodel'))
-admin.add_view(MBModelView(Models.LogisticProvider, category='Logistics'))
-admin.add_view(MBModelView(Models.ChannelProvider, category='Logistics'))
-admin.add_view(MBModelView(Models.Partner, category='Logistics'))
-admin.add_view(MBModelView(Models.Order, category='Order'))
-admin.add_view(MBModelView(Models.TransferOrderCode, category='Order'))
-admin.add_view(MBModelView(Models.OrderExtra, category='Order'))
+admin.add_view(MBModelView(Payment, category='Order', endpoint='paymentmodel'))
+admin.add_view(MBModelView(LogisticProvider, category='Logistics'))
+admin.add_view(MBModelView(ChannelProvider, category='Logistics'))
+admin.add_view(MBModelView(Partner, category='Logistics'))
+admin.add_view(MBModelView(Order, category='Order'))
+admin.add_view(MBModelView(TransferOrderCode, category='Order'))
+admin.add_view(MBModelView(OrderExtra, category='Order'))
 
-admin.add_view(MBModelView(Models.Board, category='Content'))
-admin.add_view(MBModelView(Models.Post, category='Content'))
-admin.add_view(MBModelView(Models.PostComment, category='Content'))
-admin.add_view(MBModelView(Models.PostLike, category='Content'))
-admin.add_view(MBModelView(Models.PostActivity, category='Content'))
-admin.add_view(MBModelView(Models.PostFeedback, category='Content'))
-admin.add_view(MBModelView(Models.PostTag, category='Content'))
+admin.add_view(MBModelView(Board, category='Content'))
+admin.add_view(MBModelView(Post, category='Content'))
+admin.add_view(MBModelView(PostComment, category='Content'))
+admin.add_view(MBModelView(PostLike, category='Content'))
+admin.add_view(MBModelView(PostActivity, category='Content'))
+admin.add_view(MBModelView(PostFeedback, category='Content'))
+admin.add_view(MBModelView(PostTag, category='Content'))
