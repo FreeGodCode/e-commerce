@@ -50,6 +50,7 @@ ITEM_STATUS = Enum(['NEW', 'MOD', 'DEL'])
 SEX_TAG = Enum(['MEN', 'WOMEN', 'GIRLS', 'BOYS', 'INFANTS', 'TODDLERS', 'MOMS', 'UNCLASSIFIED', 'UNKNOWN'])
 
 # order
+# 商品订单, 运输订单两类
 ORDER_TYPE = Enum(['COMMODITY', 'TRANSFER'])
 PAYMENT_METHODS = Enum(['WEIXIN', 'PAYPAL'])
 PAYMENT_TYPE = Enum(['WITHOUT_TAX', 'WITH_TAX'])
@@ -88,11 +89,11 @@ NOTIFICATION_TYPE = Enum(
     ['SYSTEM', 'COMMENT', 'FOLLOW', 'SHIPPING_DELAYED', 'LOGISTIC_DELAYED', 'ORDER_REFUNDED', 'ADMIN_ORDER_PAID',
      'DAILY_ORDER_REPORT', 'USER_SIGNUP', 'POST_LIKED', 'REPLY', ] + ORDER_STATUS)
 
-# notification channels
+# notification channels 通知渠道
 CHANNELS = Enum(['EMAIL', 'SMS', 'VOICE', 'WECHAT', 'WECHATFORMAL', 'IOS', 'NODEJS'])
 QUEUE = Enum(['HIGH', 'NORMAL', 'LOW'])
 
-# refunds
+# refunds 退款
 REFUND_TYPE = Enum(['CANCEL', 'RETURN', 'SUBSIDY', 'MANUALLY'])
 
 # report

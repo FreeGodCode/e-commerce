@@ -62,6 +62,7 @@ class Config:
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'upload')
     AVATAR_FOLDER = os.path.join(BASE_DIR, 'static/img/avatar')
 
+    # flask session, should available for all sub domain
     SESSION_COOKIE_DOMAIN = '.maybe.cn'
     SERVER_NAME = 'maybe.cn'
     # flask_login
@@ -96,14 +97,14 @@ class Config:
         'host': 'localhost',
         'port': 27017,
     }
-    # content
+    # content 评论
     CONTENT_DB_CONFIG = {
         'alias': 'db_content',
         'name': 'content',
         'host': 'localhost',
         'port': 27017,
     }
-    # log
+    # log 物流
     LOG_DB_CONFIG = {
         'alias': 'db_log',
         'name': 'log',
@@ -150,7 +151,10 @@ class Config:
     # flask_cache
     CACHE_TYPE = 'redis'
     TRACKING_EXCLUDE = (
-
+        '^/favicon.ico',
+        '^/static/',
+        '^/admin/',
+        '^/_debug_toolbar/',
     )
 
     # celery定时任务设置
@@ -166,9 +170,9 @@ class Config:
     CELERY_TASK_TIME_LIMIT = 300
     CELERY_TASK_SOFT_TIME_LIMIT = 120
     CELERY_OPTIONS = '--time-limit=300  --concurrency=1'
-
+    # 定时任务
     CELERYBEAT_SCHEDULE = {
-
+        # 汇率
         'rocord_latest_forex_rate_every_2_hours': {
             'task': 'app.services.scheduling.forex.record_latest_forex_rate',
             'schedule': crontab(minute=0, hour='*/2'),
