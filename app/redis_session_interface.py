@@ -45,7 +45,7 @@ class RedisSessionInterface(SessionInterface):
 
     def get_redis_expiration_time(self, app, session):
         """
-    获取session的过期时间
+        获取session的过期时间
         :param app:
         :param session:
         :return:

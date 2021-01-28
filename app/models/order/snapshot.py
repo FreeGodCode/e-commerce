@@ -10,6 +10,8 @@ from app import db
 
 __all__ = ['ItemSnapshot', 'ItemSpecSnapshot']
 
+from app.models.inventory.item import Item, ItemSpec
+
 
 class ItemSnapshot(db.Document):
     meta = {

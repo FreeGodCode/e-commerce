@@ -6,10 +6,13 @@
 # @Description:
 from flask import render_template
 
-from app.config.order_status import SHIPPING_HISTORY
+from app.config.order_status import SHIPPING_HISTORY, ORDER_STATUS_DESCRIPTION
+
+from app.config import *
+from app.services import jobs
 
 
-@signals.user_signup.connect
+@user_signup.connect
 def notification_user_signup(sender, user):
     """
     用户注册成功邮件通知
@@ -31,7 +34,7 @@ def notification_order(order, status):
     """
     user = order.customer
     title = '订单状态改变'
-    status_desc = ORDER_STATUS_DESC.get(status)
+    status_desc = ORDER_STATUS_DESCRIPTION.get(status)
     status_history = SHIPPING_HISTORY.get(status)
     message = render_template('email/order_status_change.html', user=user, order=order, status_history=status_history,
                               status_desc=status_desc)

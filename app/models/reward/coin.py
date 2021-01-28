@@ -135,7 +135,7 @@ class CoinTrade(Trade):
         else:
             document.wallet.update(inc__cash=amount)
 
-        Signals.coin_trade_confirmed.send('coin_trade_confirmed', trade=document)
+        coin_trade_confirmed.send('coin_trade_confirmed', trade=document)
 
     def to_json(self):
         return {

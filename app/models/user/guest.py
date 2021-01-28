@@ -3,7 +3,7 @@
 # @File name: guest.py 
 # @IDE: PyCharm
 # @Create time: 1/11/21 10:14 PM
-# @Description:
+# @Description: 游客
 from app import db
 from app.models.user.user import FavorAction
 

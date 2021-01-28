@@ -4,9 +4,12 @@
 # @IDE: PyCharm
 # @Create time: 1/23/21 3:36 PM
 # @Description:
+from app.config import item_bought
 from app.config.enum import ORDER_TYPE, COIN_TYPE, ORDER_STATUS
 from app.models.order.order import Order
+from app.services import jobs
 from app.services.logistic import logistic_provider_dispatcher
+from app.services.notification import notification_order
 
 
 def payment_received(order):
@@ -22,10 +25,15 @@ def payment_received(order):
             logistic.update_logistic({'status': 'PAYMENT_RECEIVED'})
 
     jobs.order_status.update_user_status(user_id=order.customer_id)
-    noti_order(order, 'PAYMENT_RECEIVED')
-    signals.payment_received.send('received', order=order)
+    notification_order(order, 'PAYMENT_RECEIVED')
+    from app.config import payment_received
+    payment_received.send('received', order=order)
 
-@signals.payment_received.connect
+
+from app.config import payment_received
+
+
+@payment_received.connect
 def post_payment_ops(sender, order):
     """
 
@@ -45,12 +53,10 @@ def post_payment_ops(sender, order):
         wallet.user_consumable_coupon(code)
         wallet.reload()
 
-    for order in Order.objects(customer_id=str(order.customer_id), status=ORDER_STATUS.PAYMENT_PENDING, id__ne=order.id):
+    for order in Order.objects(customer_id=str(order.customer_id), status=ORDER_STATUS.PAYMENT_PENDING,
+                               id__ne=order.id):
         order.update_amount()
 
     for entry in order.entries:
         item = entry.item
-        signals.item_bought.send('system', item_id=entry.item_snapshot.item_id)
-
-
-
+        item_bought.send('system', item_id=entry.item_snapshot.item_id)
