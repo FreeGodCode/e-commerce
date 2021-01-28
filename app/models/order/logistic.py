@@ -12,6 +12,9 @@ from flask_login import current_user
 from app import db
 from app.config.enum import LOG_STATUS
 from app.config.order_status import SHIPPING_HISTORY
+from app.models.order.express import ExpressTracking, Express
+from app.models.order.partner import Partner
+from app.config import *
 
 __all__ = ['Logistic', 'LogisticDetail', 'LogisticRemark', 'LogisticDelay', 'LogisticIrregular']
 
@@ -259,9 +262,9 @@ class Logistic(db.Document):
             setattr(log, field, value)
         self.save()
 
-        Signals.logistic_status_changed.send('send to logistic partner', log=self, status=next_status)
+        logistic_status_changed.send('send to logistic partner', log=self, status=next_status)
 
-        Signals.logistic_info_updated.send('system', logistic=self)
+        logistic_info_updated.send('system', logistic=self)
 
     def update_remark(self, content, modified_by):
         """

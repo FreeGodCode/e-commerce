@@ -6,18 +6,31 @@
 # @Description:
 import datetime
 import random
+from copy import deepcopy
 
 from flask import abort, current_app
 import mongoengine
 from flask_login import current_user
 from mongoengine import queryset_manager, Q
+from paypalrestsdk import Refund
 
 from app import db, mongo_inventory
 from app.config.enum import ORDER_TYPE, ORDER_STATUS, ORDER_SOURCES, PAYMENT_STATUS, PAYMENT_TYPE, LOG_STATUS
+from app.models.cart.cart import CartEntry
+from app.models.inventory.item import Item, ItemSpec
+from app.models.inventory.price import ForexRate
+from app.models.order.entry import OrderEntry
+from app.models.order.logistic import LogisticDetail, payment_received, order_logistic_status_changed, \
+    order_status_changed, order_created
+from app.models.reward.coin import Trade
+from app.models.user.address import Address
+from app.models.user.user import User
 
 __all__ = ['Order', 'Payment', 'TransferOrderCode', 'OrderExtra']
 
-from app.models.user.user import User
+from app.services.notification import notification_order
+from app.services.price import cal_order_price_and_apply, cal_order_tax
+from app.utils import format_date
 
 
 def check_availability_and_update_stock(item_id, sku, quantity):
@@ -250,7 +263,7 @@ class Order(db.Document):
         if address:
             order.set_address(address)
 
-        Signals.order_created.send('system', order=order)
+        order_created.send('system', order=order)
 
         return order
 
@@ -281,7 +294,7 @@ class Order(db.Document):
         if address:
             order.set_address(address)
 
-        Signals.order_created.send('system', order=order)
+        order_created.send('system', order=order)
         return order
 
     @classmethod
@@ -311,13 +324,13 @@ class Order(db.Document):
         if address:
             order.set_address(address)
 
-        Signals.order_created.send('system', order=order)
+        order_created.send('system', order=order)
         return order
 
     @property
     def item_changed(self):
         res = False
-        for e in entries:
+        for e in self.entries:
             res = res and e.item_changed
             if res:
                 return res
@@ -444,11 +457,11 @@ class Order(db.Document):
         self.save()
 
         if new_status in LOG_STATUS:
-            noti_order(self, new_status)
-            Signals.order_logistic_status_changed.send('Order.Logistic.Status.Changed', order=self,
+            notification_order(self, new_status)
+            order_logistic_status_changed.send('Order.Logistic.Status.Changed', order=self,
                                                        new_status=new_status)
         else:
-            Signals.order_status_changed.send('order_status_changed', order=self, new_status=new_status)
+            order_status_changed.send('order_status_changed', order=self, new_status=new_status)
 
     def delete_order(self):
         for l in self.logistics:

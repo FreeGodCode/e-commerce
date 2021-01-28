@@ -11,6 +11,9 @@ from app import db
 
 __all__ = ['BaseEntry', 'OrderEntry']
 
+from app.models.inventory.price import ForexRate
+from app.models.order.snapshot import ItemSnapshot, ItemSpecSnapshot
+
 
 def get_time():
     return str(time.time())
